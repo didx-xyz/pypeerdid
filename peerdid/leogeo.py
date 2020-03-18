@@ -250,17 +250,17 @@ def verify_message(didcomm_message_b64):
 
     # extract encrypted message
     didcommb64 = didcomm_message_json['connection']['message~attach']['data']['base64']
-    print(didcommb64 + '\n')
+    # print('didcomm encrypted message base64: {}'.format(didcommb64 + '\n'))
     didcomm = base64.b64decode(didcommb64)
-    print(didcomm)
+    # print('didcomm encrypted message base64 decoded: {}'.format(str(didcomm) + '\n'))
 
     # extract signature
     sig = didcomm_message_json['connection']['message~attach']['data']['sig']
-    print(sig + '\n')
+    # print(sig + '\n')
 
     # extract did
     did = didcomm_message_json['connection']['did']
-    print(did + '\n')
+    # print(did + '\n')
 
     # lookup did document and get public key
     diddoc = resolve_did(did)
@@ -273,11 +273,11 @@ def verify_message(didcomm_message_b64):
     vk1 = hex_to_keys(vk)
 
     # verify signature
-    result = verify(didcommb64.encode(), vk1, bytearray.fromhex(sig))
+    result = verify(didcomm, vk1, bytearray.fromhex(sig))
     print(
-        'The verification of the diddoc, verify key and signature extracted from didcomm_message match result: {}'.format(
+        'The verification of the didcomm message result: {}'.format(
             result))
-    return didcommb64, vk1, sig, result
+    return didcomm, vk1, sig, result
 
 # leogeo program flow
 # generate key pair for did:x.peerA
@@ -320,7 +320,7 @@ print('didcomm_message = {}'.format(didcomm_message + '\n'))
 
 didcomm_message_json = json.dumps(didcomm_message)
 didcomm_message_b64 = base64.b64encode(didcomm_message.encode('ascii'))
-print('base64 didcomm message = {}\n'.format(didcomm_message_b64.decode()))
+# print('base64 didcomm message = {}\n'.format(didcomm_message_b64.decode()))
 # print(sys.getsizeof(didcomm_message_b64))
 # print(base64.b64decode(didcomm_message_b64))
 
@@ -361,7 +361,7 @@ print('didcomm_message = {}'.format(didcomm_messageR + '\n'))
 
 didcomm_messageR_json = json.dumps(didcomm_messageR)
 didcomm_messageR_b64 = base64.b64encode(didcomm_messageR.encode('ascii'))
-print('base64 didcomm message = {}\n'.format(didcomm_messageR_b64.decode()))
+# print('base64 didcomm message = {}\n'.format(didcomm_messageR_b64.decode()))
 # print(sys.getsizeof(didcomm_message_b64))
 # print(base64.b64decode(didcomm_message_b64))
 
@@ -388,24 +388,27 @@ print(verify(diddocR, vkR, bytearray.fromhex(sigR)))
 # print(dpayload)
 
 epayload = encrypt_message(sk_hex, vkB_hex, b'hello world!')
-print(epayload)
-dpayload = decrypt_message(skB_hex, vk_hex, epayload)
-print(dpayload)
+# print('epayload: {}'.format(epayload))
+# dpayload = decrypt_message(skB_hex, vk_hex, epayload)
+# print(dpayload)
 
 b64_epayload = base64.b64encode(epayload)
-print(b64_epayload)
+# print('b64epayload: {}'.format(b64_epayload))
 b64_epayload_sig = sign(b64_epayload, skB)
 db64_epayload_sig_hex = b64_epayload_sig.hex()
-print('encrypted base64 payload signature: {}'.format(db64_epayload_sig_hex))
+# print('encrypted base64 payload signature: {}'.format(db64_epayload_sig_hex))
 
 encrypted_didcomm = send_message(1,'test',db64_epayload_sig_hex,b64_epayload,didB)
 
-print(encrypted_didcomm)
-print(base64.b64encode(encrypted_didcomm.encode()))
+# print(encrypted_didcomm)
+# print(base64.b64encode(encrypted_didcomm.encode()))
 
 # print(verify_didcomm(base64.b64encode(encrypted_didcomm.encode())))
-print(verify_message(base64.b64encode(encrypted_didcomm.encode())))
+didcommb64, vk1, sig, result = verify_message(base64.b64encode(encrypted_didcomm.encode()))
 # todo - send messages between DID peers
+# print(base64.b64decode(didcommb64))
+dpayload = decrypt_message(skB_hex, vk_hex, base64.b64decode(didcommb64))
+print(dpayload)
 # not sure if this should be a heavy didcomms message or something made much smaller?
 
 # resolve dids
