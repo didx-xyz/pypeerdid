@@ -64,12 +64,12 @@ def resolve_did(did):
     # 2. Input validation (make sure DID value is valid).
 
     fname = os.path.join(PEER_DID_STORAGE_FOLDER, str(did) + '.diddoc')
-    print(fname)
+    # print(fname)
     if os.path.isfile(fname):
         with open(fname, 'rb') as f:
             stored_variant_did_doc_bytes = f.read()
         i = stored_variant_did_doc_bytes.rfind('}'.encode())
-        return stored_variant_did_doc_bytes# + '"id": "%s"' % did + stored_variant_did_doc_bytes[i:]
+        return stored_variant_did_doc_bytes  # + '"id": "%s"' % did + stored_variant_did_doc_bytes[i:]
 
 
 # Dependencies for the following function.
@@ -183,7 +183,7 @@ def verify_didcomm(didcomm_message_b64):
     vk1 = hex_to_keys(vk)
     # extract signature
     sig = didcomm_message_json['connection']['did_doc~attach']['data']['sig']
-    print(sig + '\n')
+    # print(sig + '\n')
     # verify signature
     result = verify(diddoc, vk1, bytearray.fromhex(sig))
     print(
@@ -204,15 +204,18 @@ def icies_test(sk_hex, pk_hex, data):
     pk_bytes = secp_k.public_key.format(True)  # bytes
     print(decrypt(sk_bytes, encrypt(pk_bytes, data)))
 
+
 def encrypt_message(sk_hex, pk_hex, data):
     # encrypt message
     encrypted_data = encrypt(pk_hex, data)
     return encrypted_data
 
+
 def decrypt_message(sk_hex, pk_hex, data):
     # decrypt message
     decrypted_data = decrypt(sk_hex, data)
     return decrypted_data
+
 
 def send_message(pthid, label, sig, encrypted_message, did):
     # to implement
@@ -240,6 +243,7 @@ def send_message(pthid, label, sig, encrypted_message, did):
     # print(didcomm['connection']['message~attach']['data']['sig'])
     # print(didcomm)
     return json.dumps(didcomm)
+
 
 def verify_message(didcomm_message_b64):
     # extract base64 encoded didcomm message
@@ -279,7 +283,9 @@ def verify_message(didcomm_message_b64):
             result))
     return didcomm, vk1, sig, result
 
+
 # leogeo program flow
+print('################ did:x.peerA ################' + '\n')
 # generate key pair for did:x.peerA
 # SECP256k1 is the Bitcoin elliptic curve
 sk = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1)
@@ -301,18 +307,10 @@ save_did(bytes(diddoc.encode('ascii')))
 did = get_did_from_doc(bytes(diddoc.encode('ascii')))
 # print(did)
 
-# sign diddoc and store in diddoc and signature in variables
+# sign diddoc
 # print(diddoc.encode())
 diddocsig = sign(diddoc.encode(), sk)
 diddocsig_hex = diddocsig.hex()
-
-# print(jwt.hex())
-# print(verify(b'this is march', vk1, jwt))
-#
-#
-# jwt = sign(b'this is march', sk2)
-# print(jwt.hex())
-# print(verify(b'this is march', vk2, bytearray.fromhex(jwt.hex())))
 
 # generate invitation message
 didcomm_message = connect(1, 'did:x.peerA', diddocsig_hex, diddoc, did)
@@ -320,14 +318,12 @@ print('didcomm_message = {}'.format(didcomm_message + '\n'))
 
 didcomm_message_json = json.dumps(didcomm_message)
 didcomm_message_b64 = base64.b64encode(didcomm_message.encode('ascii'))
-# print('base64 didcomm message = {}\n'.format(didcomm_message_b64.decode()))
-# print(sys.getsizeof(didcomm_message_b64))
-# print(base64.b64decode(didcomm_message_b64))
 
 # verify didcomm invitation message
 diddoc, vk, sig, result = verify_didcomm(didcomm_message_b64)
-print(verify(diddoc, vk, bytearray.fromhex(sig)))
+verify(diddoc, vk, bytearray.fromhex(sig))
 
+print('################ did:x.peerB ################' + '\n')
 # generate did:x.peerB
 # generate key pair for did:x.peerB
 # SECP256k1 is the Bitcoin elliptic curve
@@ -350,7 +346,7 @@ save_did(bytes(diddocB.encode('ascii')))
 didB = get_did_from_doc(bytes(diddocB.encode('ascii')))
 # print(did)
 
-# sign diddoc and store in diddoc and signature in variables
+# sign diddoc
 # print(diddoc.encode())
 diddocsigB = sign(diddocB.encode(), skB)
 diddocsigB_hex = diddocsigB.hex()
@@ -361,59 +357,29 @@ print('didcomm_message = {}'.format(didcomm_messageR + '\n'))
 
 didcomm_messageR_json = json.dumps(didcomm_messageR)
 didcomm_messageR_b64 = base64.b64encode(didcomm_messageR.encode('ascii'))
-# print('base64 didcomm message = {}\n'.format(didcomm_messageR_b64.decode()))
-# print(sys.getsizeof(didcomm_message_b64))
-# print(base64.b64decode(didcomm_message_b64))
 
 # verify didcomm invitation response message
 diddocR, vkR, sigR, resultR = verify_didcomm(didcomm_messageR_b64)
-print(verify(diddocR, vkR, bytearray.fromhex(sigR)))
+verify(diddocR, vkR, bytearray.fromhex(sigR))
 
-# send a basic message between two peer DIDs
-# print(icies_test(sk_hex,vk_hex, b'hello world!'))
-
-# example of simple assymetric encryption
-# sk1 = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1)
-# vk1 = sk1.get_verifying_key()
-# sk1_hex = sk1.to_string().hex()
-# vk1_hex = vk1.to_string().hex()
-#
-# sk2 = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1)
-# vk2 = sk2.get_verifying_key()
-# sk2_hex = sk2.to_string().hex()
-# vk2_hex = vk2.to_string().hex()
-#
-# epayload = encrypt_message(sk1_hex, vk2_hex, message)
-# dpayload = decrypt_message(sk2_hex, vk1_hex, epayload)
-# print(dpayload)
-
+print('################ did:x.peerA message to did:x.peerB ################' + '\n')
+print('plaintext message to encrypt - {}'.format(b'hello world!'))
 epayload = encrypt_message(sk_hex, vkB_hex, b'hello world!')
-# print('epayload: {}'.format(epayload))
-# dpayload = decrypt_message(skB_hex, vk_hex, epayload)
-# print(dpayload)
 
 b64_epayload = base64.b64encode(epayload)
-# print('b64epayload: {}'.format(b64_epayload))
+print('base64 encrypted payload tx: {}'.format(b64_epayload))
 b64_epayload_sig = sign(b64_epayload, skB)
 db64_epayload_sig_hex = b64_epayload_sig.hex()
 # print('encrypted base64 payload signature: {}'.format(db64_epayload_sig_hex))
 
-encrypted_didcomm = send_message(1,'test',db64_epayload_sig_hex,b64_epayload,didB)
+encrypted_didcomm = send_message(1, 'test', db64_epayload_sig_hex, b64_epayload, didB)
+print('encrypted data payload in didcomm format - {}'.format(encrypted_didcomm))
 
-# print(encrypted_didcomm)
-# print(base64.b64encode(encrypted_didcomm.encode()))
-
-# print(verify_didcomm(base64.b64encode(encrypted_didcomm.encode())))
 didcommb64, vk1, sig, result = verify_message(base64.b64encode(encrypted_didcomm.encode()))
-# todo - send messages between DID peers
-# print(base64.b64decode(didcommb64))
-dpayload = decrypt_message(skB_hex, vk_hex, base64.b64decode(didcommb64))
-print(dpayload)
-# not sure if this should be a heavy didcomms message or something made much smaller?
 
-# resolve dids
-# print(resolve_did(did))
-# print(resolve_did(didB))
+print('base64 encrypted payload rx: {}'.format(didcommb64))
+dpayload = decrypt_message(skB_hex, vk_hex, base64.b64decode(didcommb64))
+print('decrypted message received from peer DID - {}\n'.format(dpayload))
 
 # send message over LEO to TTN network
 # copy and paste base64 output onto LEO terminal and schedule to transmit
@@ -421,7 +387,3 @@ print(dpayload)
 # listen for messages arriving on TTN network
 
 # fetch MQTT messages and verify DID document and signature
-
-# save DID document for did:x.peerA
-
-# resolve DID for did:x.peerA
