@@ -200,61 +200,13 @@ print('base64 didcomm message = {}'.format(didcomm_message_b64.decode()))
 
 
 
-# send message
+# send message over LEO to TTN network
+# copy and paste base64 output onto LEO terminal and schedule to transmit
 
-#
-# # SECP256k1 is the Bitcoin elliptic curve
-# sk1 = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1)
-# vk1 = sk1.get_verifying_key()
-#
-# sk2 = ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1)
-# vk2 = sk2.get_verifying_key()
-#
-# print('didA sk={}'.format(sk1.to_string().hex()))
-# print('didA vk={}'.format((vk1.to_string().hex())))
-# print('\n')
-# print('didB sk={}'.format(sk2.to_string().hex()))
-# print('didB vk={}'.format((vk2.to_string().hex())))
-# print('\n')
-#
-#
-# # get public and private keys from hex version
-# sk1 = sk1.from_string(bytearray.fromhex(sk1.to_string().hex()),curve=ecdsa.SECP256k1)
-# print('didA sk={}'.format((sk1.to_string().hex())))
-# vk1 = vk1.from_string(bytearray.fromhex(vk1.to_string().hex()),curve=ecdsa.SECP256k1)
-# print('didA vk={}'.format((vk1.to_string().hex())))
-#
-# print('\n')
-# sk2 = sk1.from_string(bytearray.fromhex(sk2.to_string().hex()),curve=ecdsa.SECP256k1)
-# print('didB sk={}'.format((sk2.to_string().hex())))
-# vk2 = vk2.from_string(bytearray.fromhex(vk2.to_string().hex()),curve=ecdsa.SECP256k1)
-# print('didB vk={}'.format((vk2.to_string().hex())))
-#
-# # base64 encoded keys
-# # public_key = base64.b64encode(bytes.fromhex(vk.to_string().hex()))
-# # print('\n')
-# # print(public_key)
-# # print(public_key.decode())
-#
-#
-# diddocA = {"@context": "https://w3id.org/did/v1", "publicKey": [''], "service": [ { "id": "default", "type": "didcomm", "serviceEndpoint": "leogeo:A"}]}
-# diddocB = {"@context": "https://w3id.org/did/v1", "publicKey": [''], "service": [ { "id": "default", "type": "didcomm", "serviceEndpoint": "leogeo:B"}]}
-#
-# print('diddocA pubkey value is={}'.format(diddocA['publicKey']))
-# diddocA['publicKey'] = vk1.to_string().hex()
-# print('diddocA pubkey value is={}'.format(diddocA['publicKey']))
-#
-# print('diddocB pubkey value is={}'.format(diddocB['publicKey']))
-# diddocB['publicKey'] = vk2.to_string().hex()
-# print('diddocB pubkey value is={}'.format(diddocB['publicKey']))
-#
-# json_diddocA = json.dumps(diddocA)
-# json_diddocB = json.dumps(diddocB)
-# # print(type(json_diddoc))
-# save_did(bytes(json_diddocA.encode('ascii')))
-# save_did(bytes(json_diddocB.encode('ascii')))
-# # print(json_diddoc.encode())
-#
-# print(get_did_from_doc(bytes(json_diddocA.encode('ascii'))))
-# print(get_did_from_doc(bytes(json_diddocB.encode('ascii'))))
-#
+# listen for messages arriving on TTN network
+
+# fetch MQTT messages and verify DID document and signature
+
+# save DID document for did:x.peerA
+
+# resolve DID for did:x.peerA
