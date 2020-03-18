@@ -145,13 +145,37 @@ def set_diddoc(pubkey_hex, endpoint):
     # print(diddoc['service'][0]['serviceEndpoint'])
     return json.dumps(diddoc)
 
-def keys_to_hex(sk,vk):
-    # return hex version of sign and verify keys
-    return sk.to_string().hex(), vk.to_string().hex()
+def keys_to_hex(vk):
+    # return hex version of key
+    return ecdsa.VerifyingKey.to_string().hex(vk)
 
-def hex_to_keys(sk,vk):
-    # return normal version of sign and verify keys from hex
-    return sk.from_string(bytearray.fromhex(sk.to_string().hex()), curve=ecdsa.SECP256k1), vk.from_string(bytearray.fromhex(vk.to_string().hex()), curve=ecdsa.SECP256k1)
+def hex_to_keys(vk):
+    # return normal version of key from hex
+    return ecdsa.VerifyingKey.from_string(bytearray.fromhex(vk), curve=ecdsa.SECP256k1)
+
+def verify_didcomm(didcomm_message_b64):
+    # extract base64 encoded didcomm message
+    # print(didcomm_message_b64)
+    didcomm_message = base64.b64decode(didcomm_message_b64)
+    didcomm_message_json = json.loads(didcomm_message.decode())
+    # print(str(didcomm_message_json) + '\n')
+
+    # extract diddoc
+    diddocb64 = didcomm_message_json['connection']['did_doc~attach']['data']['base64']
+    # print(diddocb64 + '\n')
+    diddoc = base64.b64decode(diddocb64)
+    diddoc_json = json.loads(diddoc.decode())
+    # print(str(diddoc_json) +'\n')
+    # extract public key from diddoc
+    vk = diddoc_json['publicKey']
+    # print(vk + '\n')
+    vk1 = hex_to_keys(vk)
+    # extract signature
+    sig = didcomm_message_json['connection']['did_doc~attach']['data']['sig']
+    # print(sig + '\n')
+    # verify signature
+    result = verify(diddoc, vk1, bytearray.fromhex(sig))
+    print('The verification of the didcomm_message extract diddoc, verify key and signature match: {}'.format(result))
 
 
 # leogeo program flow
@@ -177,6 +201,7 @@ did = get_did_from_doc(bytes(diddoc.encode('ascii')))
 # print(did)
 
 # sign diddoc and store in diddoc and signature in variables
+# print(diddoc.encode())
 diddocsig = sign(diddoc.encode(), sk)
 diddocsig_hex = diddocsig.hex()
 
@@ -194,11 +219,12 @@ print('didcomm_message = {}'.format(didcomm_message + '\n'))
 
 didcomm_message_json = json.dumps(didcomm_message)
 didcomm_message_b64 = base64.b64encode(didcomm_message.encode('ascii'))
-print('base64 didcomm message = {}'.format(didcomm_message_b64.decode()))
+print('base64 didcomm message = {}\n'.format(didcomm_message_b64.decode()))
 # print(sys.getsizeof(didcomm_message_b64))
 # print(base64.b64decode(didcomm_message_b64))
 
-
+# verify didcomm message
+verify_didcomm(didcomm_message_b64)
 
 # send message over LEO to TTN network
 # copy and paste base64 output onto LEO terminal and schedule to transmit
