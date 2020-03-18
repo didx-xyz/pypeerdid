@@ -175,7 +175,7 @@ def verify_didcomm(didcomm_message_b64):
     # print(sig + '\n')
     # verify signature
     result = verify(diddoc, vk1, bytearray.fromhex(sig))
-    print('The verification of the didcomm_message extract diddoc, verify key and signature match: {}'.format(result))
+    print('The verification of the diddoc, verify key and signature extracted from didcomm_message match result: {}'.format(result))
 
 
 # leogeo program flow
