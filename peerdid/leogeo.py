@@ -172,7 +172,7 @@ def verify_didcomm(didcomm_message_b64):
     vk1 = hex_to_keys(vk)
     # extract signature
     sig = didcomm_message_json['connection']['did_doc~attach']['data']['sig']
-    # print(sig + '\n')
+    print(sig + '\n')
     # verify signature
     result = verify(diddoc, vk1, bytearray.fromhex(sig))
     print('The verification of the diddoc, verify key and signature extracted from didcomm_message match result: {}'.format(result))
