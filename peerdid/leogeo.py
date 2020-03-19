@@ -381,8 +381,9 @@ print('base64 encrypted payload rx: {}'.format(didcommb64))
 dpayload = decrypt_message(skB_hex, vk_hex, base64.b64decode(didcommb64))
 print('decrypted message received from peer DID - {}\n'.format(dpayload))
 
-# send message over LEO to TTN network
 # copy and paste base64 output onto LEO terminal and schedule to transmit
+
+# send message over LEO to TTN network
 
 # listen for messages arriving on TTN network
 
