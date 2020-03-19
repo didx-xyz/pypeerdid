@@ -387,3 +387,11 @@ print('decrypted message received from peer DID - {}\n'.format(dpayload))
 # listen for messages arriving on TTN network
 
 # fetch MQTT messages and verify DID document and signature
+
+# send diddoc response
+
+# verify diddoc response received
+
+# craft encrypted message from LEO
+
+# repeat
