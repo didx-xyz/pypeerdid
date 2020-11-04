@@ -2,3 +2,7 @@ base58
 ecdsa
 ttn
 sgl>=0.9.14
+python-dotenv
+requests
+paho-mqtt
+
