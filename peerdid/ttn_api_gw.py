@@ -7,15 +7,15 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 # Load sensitive info from environment variables
-bot_token = os.environ.get("bot_token")
-bot_chatID = os.environ.get("bot_chatID")
-gateway_ID_LS1 = os.environ.get("gateway_ID_LS1")
+bot_token = os.environ.get("BOT_TOKEN")
+bot_chatID = os.environ.get("BOT_CHATID")
+gateway_ID_LS1 = os.environ.get("GATEWAY_ID_LS1")
 USERNAME = os.environ.get("USERNAME")
 PASSWORD = os.environ.get("PASSWORD")
 HOSTNAME = os.environ.get("HOSTNAME")
 PORT = os.environ.get("PORT")
-app_id = os.environ.get("app_id")
-access_key = os.environ.get("access_key")
+app_id = os.environ.get("APP_ID")
+access_key = os.environ.get("ACCESS_KEY")
 
 
 def uplink_callback(msg, client):
