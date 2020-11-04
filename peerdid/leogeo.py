@@ -51,6 +51,22 @@ def save_did(stored_variant_did_doc_bytes):
         f.write(stored_variant_did_doc_bytes)
 
 
+def save_skey(key, filename):
+    """
+    Persists a signing key doc to disk so it can be used to verify, sign and encrypt messages later. Throws on error.
+    """
+    keyname = os.path.join(PEER_DID_STORAGE_FOLDER, filename)
+    # Optional fanciness not shown here:
+    #
+    # 1. Tolerate the resolved variant of a DID doc. (Detect it by checking for the presence of
+    #    a top-level "id" property, and subtract it to get the stored variant.)
+    # 2. Specify a different folder where DID docs are stored.
+    # 3. Input validation (make sure DID doc is valid).
+
+    with open(keyname, 'wb') as f:
+        f.write(key)
+
+
 def resolve_did(did):
     """
     Given a peer DID, looks on disk to see if we have its DID doc. If yes, turns the on-disk, stored
@@ -296,6 +312,11 @@ sk_hex = sk.to_string().hex()
 vk_hex = vk.to_string().hex()
 # print(vk_hex)
 
+# save private key in hex format
+save_skey(base64.b64encode(sk_hex.encode()), 'sk.skey')
+# save public key in hex format
+save_skey(base64.b64encode(vk_hex.encode()), 'vk.skey')
+
 # generate diddoc for did:x.peerA
 diddoc = set_diddoc(vk_hex, 'leogeo:A')
 print('diddoc = {}'.format(diddoc + '\n'))
@@ -319,6 +340,8 @@ print('didcomm_message = {}'.format(didcomm_message + '\n'))
 didcomm_message_json = json.dumps(didcomm_message)
 didcomm_message_b64 = base64.b64encode(didcomm_message.encode('ascii'))
 
+print('base64 encoded message for LEO to send to TTN\n{}\n'.format(didcomm_message_b64))
+
 # verify didcomm invitation message
 diddoc, vk, sig, result = verify_didcomm(didcomm_message_b64)
 verify(diddoc, vk, bytearray.fromhex(sig))
@@ -334,6 +357,11 @@ skB_hex = skB.to_string().hex()
 # print(sk_hex)
 vkB_hex = vkB.to_string().hex()
 # print(vk_hex)
+
+# save private key in hex format
+save_skey(base64.b64encode(skB_hex.encode()), 'skB.skey')
+# save public key in hex format
+save_skey(base64.b64encode(vkB_hex.encode()), 'vkB.skey')
 
 # generate diddoc for did:x.peerB
 diddocB = set_diddoc(vkB_hex, 'leogeo:B')
@@ -357,6 +385,8 @@ print('didcomm_message = {}'.format(didcomm_messageR + '\n'))
 
 didcomm_messageR_json = json.dumps(didcomm_messageR)
 didcomm_messageR_b64 = base64.b64encode(didcomm_messageR.encode('ascii'))
+
+print('base64 encoded message response from TTN to Blockstream API back to LEO\n{}\n'.format(didcomm_messageR_b64))
 
 # verify didcomm invitation response message
 diddocR, vkR, sigR, resultR = verify_didcomm(didcomm_messageR_b64)
