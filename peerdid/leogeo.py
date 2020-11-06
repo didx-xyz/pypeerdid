@@ -7,6 +7,12 @@ import hashlib
 import os
 import re
 import sys
+import ecdsa
+import base64
+import json
+import sgl  # SGL defined on pypi and on npm; 200 lines of code to port for other langs
+from ecies.utils import generate_eth_key, generate_key
+from ecies import encrypt, decrypt
 
 # Use to detect whether a string is a valid peer DID. Parses into capture groups
 # (1=numalgo, 2=base, 3=encnumbasis).
@@ -87,12 +93,6 @@ def resolve_did(did):
         i = stored_variant_did_doc_bytes.rfind('}'.encode())
         return stored_variant_did_doc_bytes  # + '"id": "%s"' % did + stored_variant_did_doc_bytes[i:]
 
-
-# Dependencies for the following function.
-import json
-import sgl  # SGL defined on pypi and on npm; 200 lines of code to port for other langs
-
-
 def is_authorized(privilege, did_doc, *keys):
     """
     Given a named privilege, a DID doc, and one or more keys, return True if the keys
@@ -115,12 +115,6 @@ def is_authorized(privilege, did_doc, *keys):
             if sgl.satisfies(defined_keys, rule):
                 return True
     return False
-
-
-import ecdsa
-import base64
-import json
-
 
 def sign(content_bytes, skey):
     return skey.sign(content_bytes)  # emit a JWS
@@ -206,11 +200,6 @@ def verify_didcomm(didcomm_message_b64):
         'The verification of the diddoc, verify key and signature extracted from didcomm_message match result: {}'.format(
             result))
     return diddoc, vk1, sig, result
-
-
-from ecies.utils import generate_eth_key, generate_key
-from ecies import encrypt, decrypt
-
 
 def icies_test(sk_hex, pk_hex, data):
     # assymtetric encryption/decryption test
