@@ -1,5 +1,8 @@
 base58
+base64
+json
 ecdsa
+eciespy
 ttn
 sgl>=0.9.14
 python-dotenv
