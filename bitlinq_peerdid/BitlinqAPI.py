@@ -5,9 +5,26 @@ import datetime
 import os
 import sys
 from dotenv import load_dotenv, find_dotenv
+import configargparse
 
 # automatically find and load the .env file
 load_dotenv(find_dotenv())
+
+# p = configargparse.get_argument_parser()
+# p.add('-m', '--mode', required=True, help='Define the operational mode. 1:testing option on, 0:operational mode on.')
+# p.add('-ts', '--timestep', required=True, help='Define the timestep duration.')
+# p.add('-mc', '--message-count', required=True, help='Define the number of messages to send.')
+# p.add('-tf', '--time-format', required=True, help='Define the timeformat. # 1:timeformat part of message, 0: timeformat is not part of message.')
+# p.add('-m', '--message', required=True, help='Define the message to be send via Blockstream satellite')
+# p.add('-bm', '--telegram-message', required=True, help='Define the message to be send via Blockstream Telegram channel.')
+# p.add('-v', help='verbose', action='store_true')
+# options = p.parse_args()
+#
+# print(options)
+# print("----------")
+# print(p.format_help())
+# print("----------")
+# print(p.format_values())    # useful for logging where different settings came from
 
 # Load sensitive info from environment variables
 bot_token = os.environ.get("BOT_TOKEN")
