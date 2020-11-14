@@ -2,7 +2,7 @@ import base64
 import json
 import os
 import configargparse
-import datetime
+from datetime import datetime
 import sys
 import time
 
@@ -132,7 +132,7 @@ print('decrypted message received from peer DID - {}\n'.format(dpayload))
 #################### MOVE TO AFTER TTN MESSAGES RECEIVED ####################
 
 # listen for messages arriving on TTN network
-print(str(datetime.datetime.now()) + ": Starting the Bitlinq message handler - version " + str(bitlinq.version))
+print(str(datetime.now()) + ": Starting the Bitlinq message handler - version " + str(bitlinq.version))
 bitlinq.system_checks()
 
 mqttc = bitlinq.connect_mqtt()
@@ -158,53 +158,166 @@ msats = 0
 sent_messages = set()
 n_space_messages = 0
 
+""" Data received from LEO TX"""
+TTN_test_data = [
+  {
+    "device_id": "bitlinq_lacunaspace_groundterminal2",
+    "raw": "TWFVMUVhekJOVjFsNlRtMUpNRnB0VFROTmFrVTFUakpGZUU1WFRYcE9lbHByV1ZSTmVscFVhR2xPUkVFMFdsZEpNbGw2UlhoWmFtY3dXVlJXYTAweVRtaE5la1pvV2xSR2FrMUhUbXhOYlVVeVdYcFZNbHBxV1hkWlZHZDZUaw==",
+    "text": "MaU1EazBNV1l6Tm1JMFptTTNNakU1TjJFeE5XTXpOelprWVRNelpUaGlOREE0WldJMll6RXhZamcwWVRWa00yTmhNekZoWlRGak1HTmxNbUUyWXpVMlpqWXdZVGd6Tk",
+    "time": "2020-05-03T21:22:29.682809979Z"
+  },
+  {
+    "device_id": "bitlinq_lacunaspace_groundterminal2",
+    "raw": "UGRpT1RCa1pXUm1aalV6TlRCa1ltWTFNVFl6TVRVelkyWmhZMkk0TldKbU5EazFZems0TVdGbFptRXdORE0yTVdWaU9HRTFaVEE1WlRGalltRTJOamc1WldGbVpqVTVZMkl3TURZNU5qaGtOell4TUdRaWZYMTlmUT09",
+    "text": "PdiOTBkZWRmZjUzNTBkYmY1MTYzMTUzY2ZhY2I4NWJmNDk1Yzk4MWFlZmEwNDM2MWViOGE1ZTA5ZTFjYmE2Njg5ZWFmZjU5Y2IwMDY5NjhkNzYxMGQifX19fQ==",
+    "time": "2020-05-03T21:23:10.243874527Z"
+  },
+  {
+    "device_id": "bitlinq_lacunaspace_groundterminal2",
+    "raw": "SWV5SkFhV1FpT2lBaU5UWTNPRGczTmpVME1qTTBOU0lzSUNKQWRIbHdaU0k2SUNKb2RIUndjem92TDJScFpHTnZiVzB1YjNKbkwyUnBaR1Y0WTJoaGJtZGxMekV1TUM5eVpYRjFaWE4wSWl3Z0luNTBhSEpsWVdRaU9pQjdJbg==",
+    "text": "IeyJAaWQiOiAiNTY3ODg3NjU0MjM0NSIsICJAdHlwZSI6ICJodHRwczovL2RpZGNvbW0ub3JnL2RpZGV4Y2hhbmdlLzEuMC9yZXF1ZXN0IiwgIn50aHJlYWQiOiB7In",
+    "time": "2020-05-03T21:23:15.555376127Z"
+  },
+  {
+    "device_id": "bitlinq_lacunaspace_groundterminal2",
+    "raw": "S09VVXhNMjFHVlV0elFtNU1hVFJGYlU1VFkwNGlMQ0FpWkdsa1gyUnZZMzVoZEhSaFkyZ2lPaUI3SW1SaGRHRWlPaUI3SW1KaGMyVTJOQ0k2SUNKbGVVcEJXVEk1ZFdSSFZqUmtRMGsyU1VOS2IyUklVbmRqZW05MlRETmplbQ==",
+    "text": "KOUUxM21GVUtzQm5MaTRFbU5TY04iLCAiZGlkX2RvY35hdHRhY2giOiB7ImRhdGEiOiB7ImJhc2U2NCI6ICJleUpBWTI5dWRHVjRkQ0k2SUNKb2RIUndjem92TDNjem",
+    "time": "2020-05-03T21:23:25.980577202Z"
+  },
+  {
+    "device_id": "bitlinq_lacunaspace_groundterminal2",
+    "raw": "TEZYVVhWaU0wcHVUREpTY0ZwRE9USk5VMGx6U1VOS2QyUlhTbk5oVjA1TVdsaHJhVTlwUVdsT1YxbDRXbXBDYVU5VVp6TmFiVkY2VFhwRmVVMXRXWGROZWtwcFdtMU5NRmxxVlROYVIwMTNUbnBzYkU5RVRtaE5SRmw1V2tkTw==",
+    "text": "LFXUXViM0puTDJScFpDOTJNU0lzSUNKd2RXSnNhV05MWlhraU9pQWlOV1l4WmpCaU9UZzNabVF6TXpFeU1tWXdNekppWm1NMFlqVTNaR013TnpsbE9ETmhNRFl5WkdO",
+    "time": "2020-05-03T21:23:31.19851129Z"
+  },
+  {
+    "device_id": "bitlinq_lacunaspace_groundterminal2",
+    "raw": "TWFVMUVhekJOVjFsNlRtMUpNRnB0VFROTmFrVTFUakpGZUU1WFRYcE9lbHByV1ZSTmVscFVhR2xPUkVFMFdsZEpNbGw2UlhoWmFtY3dXVlJXYTAweVRtaE5la1pvV2xSR2FrMUhUbXhOYlVVeVdYcFZNbHBxV1hkWlZHZDZUaw==",
+    "text": "MaU1EazBNV1l6Tm1JMFptTTNNakU1TjJFeE5XTXpOelprWVRNelpUaGlOREE0WldJMll6RXhZamcwWVRWa00yTmhNekZoWlRGak1HTmxNbUUyWXpVMlpqWXdZVGd6Tk",
+    "time": "2020-05-03T21:23:31.404803517Z"
+  },
+  {
+    "device_id": "bitlinq_lacunaspace_groundterminal2",
+    "raw": "TmRSTWxwRVdtdE9WMGt4VGxST2ExbDZXbXRPVkZGcFRFTkJhV015Vm5sa2JXeHFXbE5KTmtsR2REZEpiV3hyU1dwdlowbHRVbXhhYlVZeFlraFJhVXhEUVdsa1NHeDNXbE5KTmtsRFNtdGhWMUpxWWpJeGRFbHBkMmRKYms1cw==",
+    "text": "NdRMlpEWmtOV0kxTlROa1l6WmtOVFFpTENBaWMyVnlkbWxqWlNJNklGdDdJbWxrSWpvZ0ltUmxabUYxYkhRaUxDQWlkSGx3WlNJNklDSmthV1JqYjIxdElpd2dJbk5s",
+    "time": "2020-05-03T21:23:31.624254546Z"
+  },
+  {
+    "device_id": "bitlinq_lacunaspace_groundterminal2",
+    "raw": "T1kyNWFjRmt5VmtaaWJWSjNZakpzZFdSRFNUWkpRMHB6V2xjNWJscFhPRFpSVTBvNVdGZ3dQU0lzSUNKemFXY2lPaUFpTkRBMU1qZzRNR1F6T0dGaU56ZzVaVGhsT0RjNE56STNaamRsWTJNMU5EY3haRGhrTkRSaVltSmtZag==",
+    "text": "OY25acFkyVkZibVJ3YjJsdWRDSTZJQ0pzWlc5blpXODZRU0o5WFgwPSIsICJzaWciOiAiNDA1Mjg4MGQzOGFiNzg5ZThlODc4NzI3ZjdlY2M1NDcxZDhkNDRiYmJkYj",
+    "time": "2020-05-03T21:23:41.824340491Z"
+  },
+  {
+    "device_id": "bitlinq_lacunaspace_groundterminal2",
+    "raw": "UGRpT1RCa1pXUm1aalV6TlRCa1ltWTFNVFl6TVRVelkyWmhZMkk0TldKbU5EazFZems0TVdGbFptRXdORE0yTVdWaU9HRTFaVEE1WlRGalltRTJOamc1WldGbVpqVTVZMkl3TURZNU5qaGtOell4TUdRaWZYMTlmUT09",
+    "text": "PdiOTBkZWRmZjUzNTBkYmY1MTYzMTUzY2ZhY2I4NWJmNDk1Yzk4MWFlZmEwNDM2MWViOGE1ZTA5ZTFjYmE2Njg5ZWFmZjU5Y2IwMDY5NjhkNzYxMGQifX19fQ==",
+    "time": "2020-05-03T21:23:42.108594628Z"
+  },
+  {
+    "device_id": "bitlinq_lacunaspace_groundterminal2",
+    "raw": "SWV5SkFhV1FpT2lBaU5UWTNPRGczTmpVME1qTTBOU0lzSUNKQWRIbHdaU0k2SUNKb2RIUndjem92TDJScFpHTnZiVzB1YjNKbkwyUnBaR1Y0WTJoaGJtZGxMekV1TUM5eVpYRjFaWE4wSWl3Z0luNTBhSEpsWVdRaU9pQjdJbg==",
+    "text": "IeyJAaWQiOiAiNTY3ODg3NjU0MjM0NSIsICJAdHlwZSI6ICJodHRwczovL2RpZGNvbW0ub3JnL2RpZGV4Y2hhbmdlLzEuMC9yZXF1ZXN0IiwgIn50aHJlYWQiOiB7In",
+    "time": "2020-05-03T21:24:07.319145352Z"
+  },
+  {
+    "device_id": "bitlinq_lacunaspace_groundterminal2",
+    "raw": "SkIwYUdsa0lqb2dNWDBzSUNKc1lXSmxiQ0k2SUNKa2FXUTZlQzV3WldWeVFTSXNJQ0pqYjI1dVpXTjBhVzl1SWpvZ2V5SmthV1FpT2lBaVpHbGtPbkJsWlhJNk1YbzJZWGRoUVVveVJHRklZMkpoVW1sTmVqWkNaVVYyUkVnNQ==",
+    "text": "JB0aGlkIjogMX0sICJsYWJlbCI6ICJkaWQ6eC5wZWVyQSIsICJjb25uZWN0aW9uIjogeyJkaWQiOiAiZGlkOnBlZXI6MXo2YXdhQUoyRGFIY2JhUmlNejZCZUV2REg5",
+    "time": "2020-05-03T21:24:52.699606236Z"
+  },
+  {
+    "device_id": "bitlinq_lacunaspace_groundterminal2",
+    "raw": "T1kyNWFjRmt5VmtaaWJWSjNZakpzZFdSRFNUWkpRMHB6V2xjNWJscFhPRFpSVTBvNVdGZ3dQU0lzSUNKemFXY2lPaUFpTkRBMU1qZzRNR1F6T0dGaU56ZzVaVGhsT0RjNE56STNaamRsWTJNMU5EY3haRGhrTkRSaVltSmtZag==",
+    "text": "OY25acFkyVkZibVJ3YjJsdWRDSTZJQ0pzWlc5blpXODZRU0o5WFgwPSIsICJzaWciOiAiNDA1Mjg4MGQzOGFiNzg5ZThlODc4NzI3ZjdlY2M1NDcxZDhkNDRiYmJkYj",
+    "time": "2020-05-03T21:24:52.870849958Z"
+  },
+  {
+    "device_id": "bitlinq_lacunaspace_groundterminal2",
+    "raw": "TEZYVVhWaU0wcHVUREpTY0ZwRE9USk5VMGx6U1VOS2QyUlhTbk5oVjA1TVdsaHJhVTlwUVdsT1YxbDRXbXBDYVU5VVp6TmFiVkY2VFhwRmVVMXRXWGROZWtwcFdtMU5NRmxxVlROYVIwMTNUbnBzYkU5RVRtaE5SRmw1V2tkTw==",
+    "text": "LFXUXViM0puTDJScFpDOTJNU0lzSUNKd2RXSnNhV05MWlhraU9pQWlOV1l4WmpCaU9UZzNabVF6TXpFeU1tWXdNekppWm1NMFlqVTNaR013TnpsbE9ETmhNRFl5WkdO",
+    "time": "2020-05-03T21:25:13.086620624Z"
+  },
+  {
+    "device_id": "bitlinq_lacunaspace_groundterminal2",
+    "raw": "S09VVXhNMjFHVlV0elFtNU1hVFJGYlU1VFkwNGlMQ0FpWkdsa1gyUnZZMzVoZEhSaFkyZ2lPaUI3SW1SaGRHRWlPaUI3SW1KaGMyVTJOQ0k2SUNKbGVVcEJXVEk1ZFdSSFZqUmtRMGsyU1VOS2IyUklVbmRqZW05MlRETmplbQ==",
+    "text": "KOUUxM21GVUtzQm5MaTRFbU5TY04iLCAiZGlkX2RvY35hdHRhY2giOiB7ImRhdGEiOiB7ImJhc2U2NCI6ICJleUpBWTI5dWRHVjRkQ0k2SUNKb2RIUndjem92TDNjem",
+    "time": "2020-05-03T21:26:02.987022803Z"
+  },
+  {
+    "device_id": "bitlinq_lacunaspace_groundterminal2",
+    "raw": "SkIwYUdsa0lqb2dNWDBzSUNKc1lXSmxiQ0k2SUNKa2FXUTZlQzV3WldWeVFTSXNJQ0pqYjI1dVpXTjBhVzl1SWpvZ2V5SmthV1FpT2lBaVpHbGtPbkJsWlhJNk1YbzJZWGRoUVVveVJHRklZMkpoVW1sTmVqWkNaVVYyUkVnNQ==",
+    "text": "JB0aGlkIjogMX0sICJsYWJlbCI6ICJkaWQ6eC5wZWVyQSIsICJjb25uZWN0aW9uIjogeyJkaWQiOiAiZGlkOnBlZXI6MXo2YXdhQUoyRGFIY2JhUmlNejZCZUV2REg5",
+    "time": "2020-05-03T21:26:03.173565028Z"
+  },
+  {
+    "device_id": "bitlinq_lacunaspace_groundterminal2",
+    "raw": "TWFVMUVhekJOVjFsNlRtMUpNRnB0VFROTmFrVTFUakpGZUU1WFRYcE9lbHByV1ZSTmVscFVhR2xPUkVFMFdsZEpNbGw2UlhoWmFtY3dXVlJXYTAweVRtaE5la1pvV2xSR2FrMUhUbXhOYlVVeVdYcFZNbHBxV1hkWlZHZDZUaw==",
+    "text": "MaU1EazBNV1l6Tm1JMFptTTNNakU1TjJFeE5XTXpOelprWVRNelpUaGlOREE0WldJMll6RXhZamcwWVRWa00yTmhNekZoWlRGak1HTmxNbUUyWXpVMlpqWXdZVGd6Tk",
+    "time": "2020-05-03T21:26:52.606369045Z"
+  }
+]
+
+bitlinq.messages = TTN_test_data
+print(bitlinq.messages)
 try:
     # Listen to server
     mqttc.loop_start()
 
     # Main loop
     while True:
-        print(str(datetime.datetime.now()) + ": V" + str(bitlinq.version) + " - Waiting for data.. " + str(
+        print(str(datetime.now()) + ": V" + str(bitlinq.version) + " - Waiting for data.. " + str(
             len(sent_messages)) + " messages (of which " + str(
             n_space_messages) + " messages from Space) relayed so far (limit=" + str(bitlinq.limit_sentmessages) + ")")
-        print(str(datetime.datetime.now()) + ": Total cost is: " + str(msats) + " millisatoshis. ")
-        print(str(datetime.datetime.now()) + ": mode=" + bitlinq.mode[bitlinq.test])
+        print(str(datetime.now()) + ": Total cost is: " + str(msats) + " millisatoshis. ")
+        print(str(datetime.now()) + ": mode=" + bitlinq.mode[bitlinq.test])
         n_messages = len(bitlinq.messages)
         if n_messages != 0:
             messages2 = []
             messages2.append(bitlinq.messages[0])
+            print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n\n')
+            print(messages2)
             if bitlinq.timeformat == 1:
-                start = 2
-                stop = 12
-                data = str(bitlinq.messages[0])
-                timesent = int(data[start:stop])  # seconds since January 1, 1970
-                timenow = int(time.time())
-                print(str(datetime.datetime.now()) + ": Time when message was sent (Unix time):" + str(timesent))
-                print(str(datetime.datetime.now()) + ": Time when message was received (Unix time):" + str(timenow))
-                print(str(datetime.datetime.now()) + ": Latency of message=" + str(
-                    (timenow - timesent) / 60) + " minutes")
+                start = 11
+                stop = 28
+                data = dict(bitlinq.messages[0])
+                print('DATA={} DATALEN {}'.format(data, len(data)))
+                timedata = data['time'][:-4]
+                timesent = datetime.strptime(timedata, '%Y-%m-%dT%H:%M:%S.%f')
+                print(timesent)
+                # timesent = int(data[start:stop])  # seconds since January 1, 1970
+                timenow = datetime.now()
+                print(str('{}: Time when message was sent Normal time: {} Unix time: {}'.format(datetime.now(), str(timesent),str(timesent.timestamp()))))
+                print(str('{}: Time when message was received Normal time: {} Unix time: {}'.format(datetime.now(), str(timenow),str(timenow.timestamp()))))
+                # print(str(datetime.now()) + ": Time when message was received (Unix time):" + str(timenow) + " " + str(timenow.timestamp()))
+                print(str(datetime.now()) + ": Latency of message=" + str(
+                    (timenow.timestamp() - timesent.timestamp()) / 60) + " minutes")
             for i in range(1, n_messages):
-                if bitlinq.messages[i] != messages[i - 1]:
-                    messages2.append(messages[i])
-            message2 = header + '\n' + '\n'.join(messages2) + '\n' + footer
-            print(str(datetime.datetime.now()) + ": Message:" + message2)
+                if bitlinq.messages[i] != bitlinq.messages[i - 1]:
+                    messages2.append(bitlinq.messages[i])
+            # print(messages2)
+            messages2 = str([messages2])
+            message2 = header + '\n' + '\n'+ messages2 + '\n' + footer
+            print(str(datetime.now()) + ": Message:" + message2)
             if message2 in sent_messages:
-                print(str(datetime.datetime.now()) + ": Message already sent before")
+                print(str(datetime.now()) + ": Message already sent before")
             else:
-                print(str(datetime.datetime.now()) + ": Gateway ID: " + bitlinq.gateway_ID[0])
+                # TODO remove static gateway assignment below for production
+                bitlinq.gateway_ID.append(TTN_GATEWAY_ID_LS1)
+                print(str(datetime.now()) + ": Gateway ID: " + bitlinq.gateway_ID[0])
                 if bitlinq.gateway_ID[0] == TTN_GATEWAY_ID_LS1:
                     print(str(
-                        datetime.datetime.now()) + ": Message received from Lacuna Space LS1 payload on-board M6P satellite!!!")
+                        datetime.now()) + ": Message received from Lacuna Space LS1 payload on-board M6P satellite!!!")
                     n_space_messages = n_space_messages + 1
                 msats = msats + bitlinq.send_pay(message2)
                 text = "Message sent to Blockstream API"
                 bitlinq.telegram_bot_sendtext(text + ": " + message2 + ", Latency of message=" + str(
                     (timenow - timesent) / 60) + " minutes, gateway_ID=" + bitlinq.gateway_ID[0])
-                print(str(datetime.datetime.now()) + ": " + text + " (with copy to Telegram)")
+                print(str(datetime.now()) + ": " + text + " (with copy to Telegram)")
                 sent_messages.add(message2)
                 if len(sent_messages) >= bitlinq.limit_sentmessages:
                     mqttc.loop_stop()
-                    print(str(datetime.datetime.now()) + ": Stopped after relaying " + str(
+                    print(str(datetime.now()) + ": Stopped after relaying " + str(
                         bitlinq.limit_sentmessages) + " messages")
                     sys.exit()
             messages = []
