@@ -150,7 +150,7 @@ mqttc.on_log = bitlinq.on_log
 # Subscribe to messages
 bitlinq.subscribe(mqttc)
 
-header = "Bitlinq message handler - PGP P2P mode -v" + str(bitlinq.version) + "| "
+header = "Bitlinq message handler - DID mode -v" + str(bitlinq.version) + "| "
 footer = " | Brought to you by www.bitlinq.space - 2020"
 n_messages = 0
 teller = 0
@@ -259,7 +259,7 @@ TTN_test_data = [
 ]
 
 bitlinq.messages = TTN_test_data
-print(bitlinq.messages)
+# print(bitlinq.messages)
 try:
     # Listen to server
     mqttc.loop_start()
@@ -273,53 +273,57 @@ try:
         print(str(datetime.now()) + ": mode=" + bitlinq.mode[bitlinq.test])
         n_messages = len(bitlinq.messages)
         if n_messages != 0:
-            messages2 = []
-            messages2.append(bitlinq.messages[0])
-            print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n\n')
-            print(messages2)
+            incoming_base64_payload = bitlinq.repack_messages(bitlinq.messages)
+            print(base64.b64decode(incoming_base64_payload))
+            # verify didcomm invitation message
+            diddocV, vk, sig, result = leogeo_did2.verify_didcomm(incoming_base64_payload)
+            leogeo_did1.verify(diddocV, vk, bytearray.fromhex(sig))
+            # messages2 = []
+            # messages2.append(bitlinq.messages[0])
+            # print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n\n')
+            # print(messages2)
             if bitlinq.timeformat == 1:
                 start = 11
                 stop = 28
                 data = dict(bitlinq.messages[0])
-                print('DATA={} DATALEN {}'.format(data, len(data)))
+                # print('DATA={} DATALEN {}'.format(data, len(data)))
                 timedata = data['time'][:-4]
                 timesent = datetime.strptime(timedata, '%Y-%m-%dT%H:%M:%S.%f')
-                print(timesent)
-                # timesent = int(data[start:stop])  # seconds since January 1, 1970
+                # print(timesent)
                 timenow = datetime.now()
                 print(str('{}: Time when message was sent Normal time: {} Unix time: {}'.format(datetime.now(), str(timesent),str(timesent.timestamp()))))
                 print(str('{}: Time when message was received Normal time: {} Unix time: {}'.format(datetime.now(), str(timenow),str(timenow.timestamp()))))
-                # print(str(datetime.now()) + ": Time when message was received (Unix time):" + str(timenow) + " " + str(timenow.timestamp()))
                 print(str(datetime.now()) + ": Latency of message=" + str(
                     (timenow.timestamp() - timesent.timestamp()) / 60) + " minutes")
-            for i in range(1, n_messages):
-                if bitlinq.messages[i] != bitlinq.messages[i - 1]:
-                    messages2.append(bitlinq.messages[i])
-            # print(messages2)
-            messages2 = str([messages2])
-            message2 = header + '\n' + '\n'+ messages2 + '\n' + footer
-            print(str(datetime.now()) + ": Message:" + message2)
-            if message2 in sent_messages:
-                print(str(datetime.now()) + ": Message already sent before")
-            else:
-                # TODO remove static gateway assignment below for production
-                bitlinq.gateway_ID.append(TTN_GATEWAY_ID_LS1)
-                print(str(datetime.now()) + ": Gateway ID: " + bitlinq.gateway_ID[0])
-                if bitlinq.gateway_ID[0] == TTN_GATEWAY_ID_LS1:
-                    print(str(
-                        datetime.now()) + ": Message received from Lacuna Space LS1 payload on-board M6P satellite!!!")
-                    n_space_messages = n_space_messages + 1
-                msats = msats + bitlinq.send_pay(message2)
-                text = "Message sent to Blockstream API"
-                bitlinq.telegram_bot_sendtext(text + ": " + message2 + ", Latency of message=" + str(
-                    (timenow - timesent) / 60) + " minutes, gateway_ID=" + bitlinq.gateway_ID[0])
-                print(str(datetime.now()) + ": " + text + " (with copy to Telegram)")
-                sent_messages.add(message2)
-                if len(sent_messages) >= bitlinq.limit_sentmessages:
-                    mqttc.loop_stop()
-                    print(str(datetime.now()) + ": Stopped after relaying " + str(
-                        bitlinq.limit_sentmessages) + " messages")
-                    sys.exit()
+
+            for item in bitlinq.messages:
+                message2 = header + item['text'] + footer
+                print(str(datetime.now()) + ": Message:" + message2)
+                if message2 in sent_messages:
+                    print(str(datetime.now()) + ": Message already sent before")
+                else:
+                    # TODO remove static gateway assignment below for production
+                    bitlinq.gateway_ID.append(TTN_GATEWAY_ID_LS1)
+                    print(str(datetime.now()) + ": Gateway ID: " + bitlinq.gateway_ID[0])
+                    if bitlinq.gateway_ID[0] == TTN_GATEWAY_ID_LS1:
+                        print(str(
+                            datetime.now()) + ": Message received from Lacuna Space LS1 payload on-board M6P satellite!!!")
+                        n_space_messages = n_space_messages + 1
+                    # TODO remove disabling of Blockstream LN message sending
+                    # msats = msats + bitlinq.send_pay(message2)
+                    text = "Message sent to Blockstream API" + ": " + message2 + ", Latency of message=" + str(
+                        (timenow.timestamp() - timesent.timestamp()) / 60) + " minutes, gatewayID=" + bitlinq.gateway_ID[0]
+                    # print(text)
+                    # print(bitlinq.telegram_bot_sendtext(str(didcomm_messageR_b64.decode())))
+                    response = bitlinq.telegram_bot_sendtext(text)
+                    print('\nTELGRAM HTTP Post Response: {}\n'.format(response))
+                    print(str(datetime.now()) + ": " + text + " (with copy to Telegram)")
+                    sent_messages.add(message2)
+                    if len(sent_messages) >= bitlinq.limit_sentmessages:
+                        mqttc.loop_stop()
+                        print(str(datetime.now()) + ": Stopped after relaying " + str(
+                            bitlinq.limit_sentmessages) + " messages")
+                        sys.exit()
             messages = []
             gateway_ID = []
         time.sleep(bitlinq.timestep)

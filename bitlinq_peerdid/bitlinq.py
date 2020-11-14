@@ -12,7 +12,8 @@ class BitlinqAPI:
         self.timestep = 30  # seconds
         self.limit_sentmessages = 8
         self.version = 1.054
-        self.messages = []
+        # TODO consider changing messages to a dict
+        self.messages = {}
 
         self.gateway_ID = []
         self.test = 0  # 1:testing option on, 0:operational mode on
@@ -172,7 +173,7 @@ class BitlinqAPI:
             bid = 0
         return bid
 
-    def repack_messages(self, messages):
+    def repack_messages(self, data):
         counter = 0
         index = set()
         payloads = {}
@@ -214,5 +215,6 @@ class BitlinqAPI:
             print("%s: %s" % (key, list(values)[0]))
             base64_payload += list(values)[0]
 
-        print(base64_payload)
-        print("\n")
+        # print(base64_payload)
+        # print("\n")
+        return base64_payload
