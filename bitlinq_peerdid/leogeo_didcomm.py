@@ -235,9 +235,6 @@ class LeoGeoDID:
         print(sig + '\n')
         # verify signature
         result = self.verify(diddoc, vk1, bytearray.fromhex(sig))
-        print(
-            '\nThe verification of the diddoc, verify key and signature extracted from didcomm_message match result: {}\n'.format(
-                result))
         return diddoc, vk1, sig, result
 
     def icies_test(self, sk_hex, pk_hex, data):
@@ -319,8 +316,5 @@ class LeoGeoDID:
 
         # verify signature
         result = self.verify(didcomm, vk1, bytearray.fromhex(sig))
-        print(
-            'The verification of the didcomm message result: {}'.format(
-                result))
         return didcomm, vk1, sig, result
 
