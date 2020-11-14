@@ -11,13 +11,16 @@ class BitlinqAPI:
         # Set variables
         self.timestep = 30  # seconds
         self.limit_sentmessages = 8
-        self.version = 1.054
-        # TODO consider changing messages to a dict
+        self.version = 0.01
         self.messages = {}
 
         self.gateway_ID = []
         self.test = 0  # 1:testing option on, 0:operational mode on
-        self.mode = ["Operational", "Testing (no LN payments executed)"]
+        self.mode = ['Operational', 'Testing (no LN payments executed)']
+        # TODO implement multi-mode option
+        self.opmode = ['did', 'pgp']
+        # TODO implement multiple communication channels such as LEOGEO (bitlinq)|Telegram|Slack|etc
+        self.channel = ['bitlinq', 'telegram']
         self.timeformat = 1  # 1:timeformat part of message, 0: timeformat is not part of message
 
         self.BOT_TOKEN = BOT_TOKEN
@@ -44,6 +47,8 @@ class BitlinqAPI:
         }
 
         self.client_id = f'python-mqtt-{random.randint(0, 100)}'
+
+
 
     # reports connection status
     def connect_mqtt(self) -> mqtt:
@@ -123,6 +128,7 @@ class BitlinqAPI:
         print(str(datetime.datetime.now()) + ": TTN - userdata:" + str(obj))
 
     # ---------------------------------------------------
+    # TODO implement actual checks for all system components
     def system_checks(self):
         print(str(datetime.datetime.now()) + ": Check Bitcoin Node (bitcoind)")
         print(str(datetime.datetime.now()) + ": Check Lightning Network (LN) node (c-lightning)")
@@ -173,7 +179,7 @@ class BitlinqAPI:
             bid = 0
         return bid
 
-    def repack_messages(self, data):
+    def repack_messages_json(self, data):
         counter = 0
         index = set()
         payloads = {}
@@ -187,6 +193,52 @@ class BitlinqAPI:
             message_number = ord(row['text'][0:1])
             if message_number not in payloads.keys():
                 payloads[message_number] = {row['text'][1:]}
+                # print(payloads)
+
+            # if ord(row['text'][0:1]) - 65 - 12 >= counter:
+            #   print(counter)
+            #   base64+=row['text'][1:-1]
+            #   counter+=1
+            # #print(row['text'][1:-1])
+            # # payloads["index"] = ord(row['text'][0:1]) - 65 - 12
+            # # payloads["payload"] = row['text'][1:-1]
+            # payloads.update([('index', ord(row['text'][0:1]) - 65 - 12), ('payload', row['text'][1:-1])])
+            # index.add(ord(row['text'][0:1]) - 65 - 12)
+
+        # sorted(list, key=..., reverse=...)
+        # print(sorted(index))
+
+        # print(payloads.keys())
+        # print(payloads.values())
+        # print("\n")
+
+        # for key, payload in payloads.items():
+        #   print(payload)
+        # Creates a sorted dictionary (sorted by key)
+        from collections import OrderedDict
+        payloads_sorted = OrderedDict(sorted(payloads.items()))
+        for key, values in payloads_sorted.items():
+            print("%s: %s" % (key, list(values)[0]))
+            base64_payload += list(values)[0]
+
+        # print(base64_payload)
+        # print("\n")
+        return base64_payload
+
+    def repack_messages_list(self, data):
+        counter = 0
+        index = set()
+        payloads = {}
+        base64_payload = ''
+        counter = 0
+        for row in data:
+            # with 23 messages expected
+            # print(ord(row['text'][0:1]) - 65 - 23)
+            # with 12 messages expected
+            # print(ord(row['text'][0:1]) - 65 - 12)
+            message_number = ord(row[0:1])
+            if message_number not in payloads.keys():
+                payloads[message_number] = {row[1:]}
                 # print(payloads)
 
             # if ord(row['text'][0:1]) - 65 - 12 >= counter:
