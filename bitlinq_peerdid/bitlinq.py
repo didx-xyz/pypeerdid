@@ -171,3 +171,48 @@ class BitlinqAPI:
         if self.test == 1:
             bid = 0
         return bid
+
+    def repack_messages(self, messages):
+        counter = 0
+        index = set()
+        payloads = {}
+        base64_payload = ''
+        counter = 0
+        for row in data:
+            # with 23 messages expected
+            # print(ord(row['text'][0:1]) - 65 - 23)
+            # with 12 messages expected
+            # print(ord(row['text'][0:1]) - 65 - 12)
+            message_number = ord(row['text'][0:1])
+            if message_number not in payloads.keys():
+                payloads[message_number] = {row['text'][1:]}
+                # print(payloads)
+
+            # if ord(row['text'][0:1]) - 65 - 12 >= counter:
+            #   print(counter)
+            #   base64+=row['text'][1:-1]
+            #   counter+=1
+            # #print(row['text'][1:-1])
+            # # payloads["index"] = ord(row['text'][0:1]) - 65 - 12
+            # # payloads["payload"] = row['text'][1:-1]
+            # payloads.update([('index', ord(row['text'][0:1]) - 65 - 12), ('payload', row['text'][1:-1])])
+            # index.add(ord(row['text'][0:1]) - 65 - 12)
+
+        # sorted(list, key=..., reverse=...)
+        # print(sorted(index))
+
+        # print(payloads.keys())
+        # print(payloads.values())
+        # print("\n")
+
+        # for key, payload in payloads.items():
+        #   print(payload)
+        # Creates a sorted dictionary (sorted by key)
+        from collections import OrderedDict
+        payloads_sorted = OrderedDict(sorted(payloads.items()))
+        for key, values in payloads_sorted.items():
+            print("%s: %s" % (key, list(values)[0]))
+            base64_payload += list(values)[0]
+
+        print(base64_payload)
+        print("\n")
